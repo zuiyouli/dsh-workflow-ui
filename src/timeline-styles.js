@@ -132,6 +132,15 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 /* 折叠片呼吸点：隐藏药丸里有 running 时提示下方有活动 */
 .zcf-chip-live { width: 6px; height: 6px; border-radius: 50%; background: var(--color-warning); flex: none; animation: zcf-chip-pulse 1.2s ease-in-out infinite; }
 @keyframes zcf-chip-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
+/* 药丸 → 子会话跳转（childId 存在时） */
+.zcf-pill.is-link { cursor: pointer; }
+.zcf-pill.is-link:hover { background: var(--color-surface-hover); border-color: color-mix(in oklab, var(--color-border) 130%, transparent); }
+.zcf-pill.is-link:focus-visible { outline: 1px solid var(--color-foreground-subtle); outline-offset: 1px; }
+/* 回边目标站徽标：仅换行模式显示（宽屏模式弧线本身可见） */
+.zcf-loop-badge { flex: none; margin-left: 2px; padding: 0 3px; border: 1px dashed color-mix(in oklab, var(--color-border) 90%, transparent); border-radius: 4px; font-size: 10px; line-height: 13px; color: var(--color-foreground-subtlest); }
+@container zcf (min-width: 920px) {
+  .zcf-loop-badge { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .zcf-sd-motion, .zcf-sd-arc, .zcf-kind.is-running,
   .zcf-pill.is-running .zcf-avatar::before, .zcf-pill.is-running .zcf-avatar::after { animation: none; }

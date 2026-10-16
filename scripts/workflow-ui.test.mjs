@@ -55,14 +55,17 @@ test("alongside band: raised track, band range, planned placeholder stays pendin
     ],
   }
   const m = modelFromRunNode({ data: { name: "t", status: "running", phases: [
-    { phase: "需求澄清", members: [{ label: "需求澄清员", status: "completed" }] },
+    { phase: "需求澄清", members: [{ label: "需求澄清员", status: "completed", childId: "sess-abc" }] },
     { phase: "方案-解析", members: [{ label: "方案-解析", status: "completed" }] },
     { phase: "方案-容错", members: [{ label: "方案-容错", status: "running" }] },
   ] } }, declared)
   assert.equal(m.maxTrack, 1)
   assert.deepEqual(m.bands, [{ lo: 1, hi: 2 }])
   assert.equal(m.stations[3].pills[0]?.status, "pending") // 编码实现未启动 → 计划占位
-})
+  assert.equal(m.stations[0].pills[0]?.childId, "sess-abc") // childId 透传（子会话跳转）
+  const h = renderTimelineHTML(m)
+  assert.ok(h.includes('data-child="sess-abc"'))
+  assert.ok(h.includes("zcf-pill is-link"))
 
 test("arcs: adjacent edges skipped, loop arc flagged, lanes pushed up on overlap", () => {
   const m = buildTimeline(
@@ -101,6 +104,8 @@ test("render: loop arc svg with marker, 6px rounded band join", () => {
   assert.ok(h.includes("zcf-arc-ink march")) // 侦察→评审 落 running 站
   assert.ok(h.includes("zcf-mk-")) // marker defs
   assert.match(h, /Q \d+ \d+ \d+ \d+/) // 圆角拐点（Q 曲线）
+  assert.equal(m.stations[0].loopTarget, true) // 回边目标站 → 徽标（换行模式提示）
+  assert.ok(h.includes("zcf-loop-badge"))
 })
 
 test("pill overflow: >5 pills collapse behind a +N chip", () => {

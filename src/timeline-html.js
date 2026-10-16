@@ -43,7 +43,9 @@ function pill(p, i) {
     : p.status === "failed" ? `<span class="zcf-pillmark is-failed">${ICON_CLOSE}</span>`
     : ""
   const st = p.status === "pending" ? "" : ` is-${p.status}`
-  return `<span class="zcf-pill${st}${p.settled ? " is-settled" : ""}" role="listitem" style="--zcf-d:${i * 30}ms;--wf-avatar:${FACE_COLORS[p.avatar % 9]}">
+  // 有子会话的药丸可点击跳转（childId 来自官方投影成员）
+  const linkAttrs = p.childId ? ` is-link" data-child="${escapeHtml(p.childId)}" tabindex="0" title="打开子会话` : ""
+  return `<span class="zcf-pill${st}${p.settled ? " is-settled" : ""}${linkAttrs}" role="listitem" style="--zcf-d:${i * 30}ms;--wf-avatar:${FACE_COLORS[p.avatar % 9]}">
     <span class="zcf-avatar" aria-hidden="true"></span>
     <span class="zcf-pillname">${escapeHtml(p.label)}</span>
     <span class="zcf-pillmark">${mark}</span>
@@ -66,7 +68,7 @@ function station(s, i, nextSeg, expandedSet) {
     : ""
   return `<div class="zcf-station${visitedCls}${raiseCls}" data-station-status="${cls}">
     <span class="zcf-lamp${cls === "running" ? " is-ongoing" : ""}">${stateDot(LAMP_STATE[cls] ?? "idle")}</span>
-    <div class="zcf-station-head"><span class="zcf-station-name" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</span>${meta}${seg}</div>
+    <div class="zcf-station-head"><span class="zcf-station-name" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</span>${meta}${s.loopTarget ? `<span class="zcf-loop-badge" title="后序阶段回访此阶段">↩</span>` : ""}${seg}</div>
     ${pillsHtml}
   </div>`
 }

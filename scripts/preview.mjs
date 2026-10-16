@@ -71,7 +71,7 @@ const many = t.buildTimeline(
     { label: "子任务-A", phase: "并行深挖", status: "done" },
     { label: "子任务-H", phase: "并行深挖", status: "done" },
     { label: "子任务-C", phase: "并行深挖", status: "done" },
-    { label: "子任务-I", phase: "并行深挖", status: "pending" },
+    { label: "子任务-I", phase: "并行深挖", status: "failed" },
   ] },
 )
 

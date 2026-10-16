@@ -129,7 +129,7 @@ export function buildTimeline(meta, run = {}) {
     const pills = mine.map((a) => {
       const st = normPill(a.status)
       const settled = isSettled(st)
-      return { label: a.label ?? "agent", status: st, avatar: faceSeq++ % 9, settled }
+      return { label: a.label ?? "agent", status: st, avatar: faceSeq++ % 9, settled, childId: a.childId ?? null }
     })
     return { title: p.title, status, visited: status !== "pending", pills, meta: `${pills.filter((x) => x.settled).length}/${pills.length}` }
   })
@@ -203,6 +203,8 @@ export function buildTimeline(meta, run = {}) {
     }
   }
   const arcLanes = arcs.reduce((n, a) => Math.max(n, a.lane + 1), 0)
+  // 回边目标站标记：换行模式下弧不可见，用徽标提示“此阶段会被后序回访”
+  for (const a of arcs) if (a.loop) stations[a.to].loopTarget = true
   const allAgents = stations.flatMap((s) => s.pills)
   return {
     name: meta?.name ?? "workflow", status: runStatus, word: rw.word, tone: rw.tone,

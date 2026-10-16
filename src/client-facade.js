@@ -31,16 +31,25 @@ window.__ModuleLoader__.load({
       const node = props?.node
       const [tick, setTick] = useState(0)
       const rootRef = useRef(null)
+      const osRef = useRef(null)
+      osRef.current = props?.openSession
       useEffect(() => {
         const bump = () => setTick((x) => x + 1)
         metaStore.listeners.add(bump)
         return () => metaStore.listeners.delete(bump)
       }, [])
-      // 药丸折叠片：根节点上挂一次点击委托（innerHTML 重渲染不丢监听）
+      // 药丸交互：根节点上挂一次委托（innerHTML 重渲染不丢监听）——折叠片切换 + 子会话跳转
       useEffect(() => {
         const root = rootRef.current
         if (!root || !root.addEventListener) return
+        const open = (link) => {
+          const id = link.dataset.child
+          const os = osRef.current
+          if (id && typeof os === "function") { try { os(id) } catch { /* 跳转失败静默 */ } }
+        }
         const onClick = (e) => {
+          const link = e.target && e.target.closest ? e.target.closest(".zcf-pill.is-link") : null
+          if (link) { open(link); return }
           const b = e.target && e.target.closest ? e.target.closest(".zcf-pillmore") : null
           if (!b) return
           const wrap = b.closest(".zcf-pills")
@@ -50,8 +59,16 @@ window.__ModuleLoader__.load({
           if (key) { if (collapsed) expandedPills.delete(key); else expandedPills.add(key) }
           b.setAttribute("aria-expanded", collapsed ? "false" : "true")
         }
+        const onKey = (e) => {
+          if (e.key !== "Enter" && e.key !== " ") return
+          const link = e.target && e.target.closest ? e.target.closest(".zcf-pill.is-link") : null
+          if (!link) return
+          e.preventDefault()
+          open(link)
+        }
         root.addEventListener("click", onClick)
-        return () => root.removeEventListener("click", onClick)
+        root.addEventListener("keydown", onKey)
+        return () => { root.removeEventListener("click", onClick); root.removeEventListener("keydown", onKey) }
       }, [])
       // 换行接线：实测每站所在行，行尾站延伸到卡内容右缘 + 下折箭头；行首站从卡内容左缘引入
       useEffect(() => {
