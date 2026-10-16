@@ -50,16 +50,20 @@ function pill(p, i) {
   </span>`
 }
 
-function station(s, i, nextSeg) {
+function station(s, i, nextSeg, expandedSet) {
   const cls = s.status === "running" ? "running" : s.status === "done" ? "done" : s.status === "failed" ? "failed" : "pending"
   const visitedCls = s.visited ? " is-visited" : ""
   const meta = s.pills.length > 0 ? `<span class="zcf-station-meta">${s.meta}</span>` : ""
   // 出站的轨段长在本站头行末尾（名字/计数之后），延伸到下一站灯心——文字区域永远无线
   const seg = nextSeg ? `<span class="zcf-railseg${nextSeg === "faint" ? "" : " " + nextSeg}" aria-hidden="true"></span>` : ""
   const raiseCls = s.track ? ` zcf-raise-${Math.min(s.track, 2)}` : ""
-  // 药丸 >5 折叠：前 5 常显 + ＋N 展开片（点击切换 is-collapsed；全计划占位仍在 DOM）
+  // 药丸 >5 折叠：前 5 常显 + ＋N 展开片（展开态按站名跨重渲染保留；隐藏药丸里有 running 时呼吸提示）
   const many = s.pills.length > 5
-  const pillsHtml = s.pills.length ? `<div class="zcf-pills${many ? " is-collapsed" : ""}" role="list">${s.pills.map(pill).join("")}${many ? `<button type="button" class="zcf-pillmore" aria-expanded="false"><span class="t-more">＋${s.pills.length - 5}</span><span class="t-less">收起</span></button>` : ""}</div>` : ""
+  const collapsed = many && !(expandedSet && expandedSet.has(s.title))
+  const live = collapsed && s.pills.slice(5).some((p) => p.status === "running")
+  const pillsHtml = s.pills.length
+    ? `<div class="zcf-pills${collapsed ? " is-collapsed" : ""}" data-station="${escapeHtml(s.title)}" role="list">${s.pills.map(pill).join("")}${many ? `<button type="button" class="zcf-pillmore" aria-expanded="${collapsed ? "false" : "true"}"><span class="t-more">＋${s.pills.length - 5}</span><span class="t-less">收起</span>${live ? `<span class="zcf-chip-live" aria-hidden="true"></span>` : ""}</button>` : ""}</div>`
+    : ""
   return `<div class="zcf-station${visitedCls}${raiseCls}" data-station-status="${cls}">
     <span class="zcf-lamp${cls === "running" ? " is-ongoing" : ""}">${stateDot(LAMP_STATE[cls] ?? "idle")}</span>
     <div class="zcf-station-head"><span class="zcf-station-name" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</span>${meta}${seg}</div>
@@ -71,7 +75,8 @@ function head(m) {
   // ZCode 形态：种类词内嵌状态；紧凑模式（无站点）只留身份（图标+名），状态交给运行卡
   const hasStations = (m.stations?.length ?? 0) > 0
   const runLamp = m.status === "running" ? "running" : m.status === "completed" ? "done" : m.status === "errored" ? "failed" : "pending"
-  const agents = m.status === "running" ? `${m.agentsRunning} 个子代理工作中` : `${m.agentsTotal} 个子代理`
+  const prog = m.progress ? `${m.progress.settled}/${m.progress.total}` : `${m.agentsTotal}`
+  const agents = m.status === "running" ? `${prog} 子代理 · ${m.agentsRunning} 工作中` : `${m.agentsTotal} 个子代理`
   const detail = hasStations ? `${m.phaseCount} 个阶段 · ${agents}` : ""
   const kind = hasStations ? `工作流${escapeHtml(m.word)}` : "工作流"
   return `<div class="zcf-head">
@@ -85,7 +90,7 @@ function head(m) {
   </div>`
 }
 
-export function renderTimelineHTML(m) {
+export function renderTimelineHTML(m, opts = {}) {
   // 无站点 → ZCode 工具行式一行摘要（不画空轨道）
   if (!m.stations || m.stations.length === 0) {
     return `<div class="zcf-root"><div class="zcf-card zcf-compact">${head(m)}</div></div>`
@@ -141,6 +146,6 @@ export function renderTimelineHTML(m) {
   return `<div class="zcf-root"><div class="zcf-card">${head(m)}<div class="zcf-plot"><div class="zcf-strip"${stripStyle}>
     ${arcSvg}
     ${svgs}
-    ${m.stations.map((s, i) => station(s, i, m.stations[i + 1]?.seg)).join("")}
+    ${m.stations.map((s, i) => station(s, i, m.stations[i + 1]?.seg, opts.expanded)).join("")}
   </div></div></div></div>`
 }

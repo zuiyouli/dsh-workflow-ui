@@ -80,7 +80,7 @@ test("render: header form, DSH StateDot spinner, march railseg", () => {
   ] })
   const h = renderTimelineHTML(m)
   assert.match(h, /zcf-kind[^>]*>工作流运行中</)
-  assert.match(h, /zcf-detail">\s*<span>2 个阶段 · 1 个子代理工作中</)
+  assert.match(h, /zcf-detail">\s*<span>2 个阶段 · 1\/2 子代理 · 1 工作中</)
   assert.ok(h.includes("zcf-railseg march"))
   assert.ok(h.includes("zcf-sd-spinner")) // running 灯 = DSH spinner 弧
   assert.ok(h.includes('data-state="done"'))
@@ -110,6 +110,7 @@ test("pill overflow: >5 pills collapse behind a +N chip", () => {
   assert.ok(h.includes("zcf-pills is-collapsed"))
   assert.ok(h.includes("＋3"))
   assert.ok(h.includes("t-less"))
+  assert.ok(h.includes("zcf-chip-live")) // 隐藏药丸里有 running → 呼吸提示
 })
 
 test("modelFromRunNode: interrupted projection keeps station running", () => {

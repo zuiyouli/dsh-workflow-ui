@@ -129,6 +129,9 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-pillmore .t-less { display: none; }
 .zcf-pills:not(.is-collapsed) .zcf-pillmore .t-more { display: none; }
 .zcf-pills:not(.is-collapsed) .zcf-pillmore .t-less { display: inline; }
+/* 折叠片呼吸点：隐藏药丸里有 running 时提示下方有活动 */
+.zcf-chip-live { width: 6px; height: 6px; border-radius: 50%; background: var(--color-warning); flex: none; animation: zcf-chip-pulse 1.2s ease-in-out infinite; }
+@keyframes zcf-chip-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
 @media (prefers-reduced-motion: reduce) {
   .zcf-sd-motion, .zcf-sd-arc, .zcf-kind.is-running,
   .zcf-pill.is-running .zcf-avatar::before, .zcf-pill.is-running .zcf-avatar::after { animation: none; }

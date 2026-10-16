@@ -18,6 +18,8 @@ window.__ModuleLoader__.load({
 
     // ── meta store：工具行（隐形）把脚本 meta 存这里，运行卡订阅消费 ──
     const metaStore = { byName: new Map(), listeners: new Set() }
+    // 药丸折叠展开态（按站名跨重渲染保留——事件流每次更新都全量重渲染 innerHTML）
+    const expandedPills = new Set()
     function stashMeta(name, meta) {
       if (!name || !meta) return
       metaStore.byName.set(name, meta)
@@ -44,6 +46,8 @@ window.__ModuleLoader__.load({
           const wrap = b.closest(".zcf-pills")
           if (!wrap) return
           const collapsed = wrap.classList.toggle("is-collapsed")
+          const key = wrap.dataset.station
+          if (key) { if (collapsed) expandedPills.delete(key); else expandedPills.add(key) }
           b.setAttribute("aria-expanded", collapsed ? "false" : "true")
         }
         root.addEventListener("click", onClick)
@@ -97,7 +101,7 @@ window.__ModuleLoader__.load({
       if (model.ok === false) {
         return h("div", { style: { padding: "6px 10px", fontSize: "12px", color: "var(--color-foreground-subtle)" } }, "workflow-ui 渲染降级: " + (model.err ?? "?"))
       }
-      return h("div", { ref: rootRef, dangerouslySetInnerHTML: { __html: renderTimelineHTML(model.m) } })
+      return h("div", { ref: rootRef, dangerouslySetInnerHTML: { __html: renderTimelineHTML(model.m, { expanded: expandedPills }) } })
     }
 
     // 工具行 = 隐形数据源：显示空标记（CSS :has 隐藏整行），挂载时解析 argsRaw 并 stash。
