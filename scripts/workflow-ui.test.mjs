@@ -65,7 +65,8 @@ test("alongside band: raised track, band range, planned placeholder stays pendin
   assert.equal(m.stations[0].pills[0]?.childId, "sess-abc") // childId 透传（子会话跳转）
   const h = renderTimelineHTML(m)
   assert.ok(h.includes('data-child="sess-abc"'))
-  assert.ok(h.includes("zcf-pill is-link"))
+  assert.ok(h.includes('is-link" data-child="sess-abc"'))
+})
 
 test("arcs: adjacent edges skipped, loop arc flagged, lanes pushed up on overlap", () => {
   const m = buildTimeline(
