@@ -1,0 +1,4 @@
+# dsh-workflow-ui bundle patch: one web-profile row.
+- insert:
+    - id: workflow-ui
+      name: dsh-workflow-ui
