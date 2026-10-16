@@ -28,5 +28,10 @@ for (const marker of ["/*@CSS_INJECT@*/", "/*@SCAN_INJECT@*/", "/*@MODEL_INJECT@
   if (out.includes(marker)) throw new Error(`marker not replaced: ${marker}`)
 }
 if (!out.includes("zcf-sd-spinner") || !out.includes("zcf-arc-ink") || !out.includes("FACE_COLORS") || !out.includes("buildTimeline") || !out.includes("scanScript")) throw new Error("assembly incomplete")
+const cssStart = out.indexOf("const CSS = `")
+const cssEnd = out.indexOf("`", cssStart + 12)
+const css = out.slice(cssStart + 12, cssEnd)
+const open = (css.match(/\{/g) || []).length, close = (css.match(/\}/g) || []).length
+if (open !== close) throw new Error(`CSS braces unbalanced: ${open} open vs ${close} close`)
 writeFileSync(join(root, "lib", "client.js"), out)
 console.log("built lib/client.js", out.length, "bytes")

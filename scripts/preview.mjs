@@ -102,10 +102,46 @@ body { margin: 0; font-family: system-ui, sans-serif; }
 <div class="wrap">${t.renderTimelineHTML(looped)}</div>
 <div class="wrap">${t.renderTimelineHTML(banded)}</div>
 <div class="wrap">${t.renderTimelineHTML(completed)}</div>
+<div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(looped)}</div>
+<div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(banded)}</div>
 <div class="wrap">${toolRow}</div>
 <div class="wrap dark"><div class="dark-sim">${t.renderTimelineHTML(running)}<div class="wrap" style="padding:12px 0 0">${t.renderTimelineHTML(banded)}</div></div></div>
 <script>
 (function () {
+  function orthPath(pts, r) {
+    r = r || 6
+    var d = "M " + pts[0][0] + " " + pts[0][1]
+    for (var i = 1; i < pts.length - 1; i++) {
+      var px = pts[i - 1][0], py = pts[i - 1][1], cx = pts[i][0], cy = pts[i][1], nx = pts[i + 1][0], ny = pts[i + 1][1]
+      var d1x = Math.sign(cx - px), d1y = Math.sign(cy - py), d2x = Math.sign(nx - cx), d2y = Math.sign(ny - cy)
+      var rr = Math.max(0, Math.min(r, (Math.abs(cx - px) + Math.abs(cy - py)) / 2, (Math.abs(nx - cx) + Math.abs(ny - cy)) / 2))
+      d += " L " + (cx - d1x * rr) + " " + (cy - d1y * rr) + " Q " + cx + " " + cy + " " + (cx + d2x * rr) + " " + (cy + d2y * rr)
+    }
+    return d + " L " + pts[pts.length - 1][0] + " " + pts[pts.length - 1][1]
+  }
+  function drawWrapArcs(strip) {
+    var svg = strip.querySelector(":scope > .zcf-arcs-wrap"); if (!svg) return
+    var arcs = JSON.parse(strip.getAttribute("data-arcs") || "[]")
+    var stations = [].slice.call(strip.querySelectorAll(":scope > .zcf-station"))
+    var multi = stations.length > 1 && stations.some(function (st) { return st.offsetTop !== stations[0].offsetTop })
+    if (!multi || !arcs.length) { svg.style.display = "none"; svg.innerHTML = ""; strip.style.paddingTop = ""; return }
+    strip.style.paddingTop = "30px"
+    var W = strip.clientWidth, H = strip.offsetHeight
+    var pos = stations.map(function (st) { return { x: st.offsetLeft + 17, y: st.offsetTop + 12, top: st.offsetTop } })
+    var defs = "<defs>" + ["faint", "strong", "march"].map(function (k) { return '<marker id="zcf-wmk-' + k + '" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ' + k + '" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>' }).join("") + "</defs>"
+    var paths = []
+    arcs.forEach(function (a) {
+      var p1 = pos[a.from], p2 = pos[a.to], d
+      if (p1.top === p2.top) { var ly = p1.top - 26 - 14 * a.lane; d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8) }
+      else {
+        var edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
+        d = orthPath([[p1.x, p1.y - 5], [p1.x, pos[a.from].top - 16], [edgeX, pos[a.from].top - 16], [edgeX, pos[a.to].top - 16], [p2.x, pos[a.to].top - 16], [p2.x, p2.y - 5]], 6)
+      }
+      paths.push('<path class="zcf-arc-ink ' + a.ink + '" marker-end="url(#zcf-wmk-' + a.ink + ')" d="' + d + '"/>')
+    })
+    svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", "0 0 " + W + " " + H)
+    svg.innerHTML = defs + paths.join(""); svg.style.display = "block"
+  }
   function zcfMeasure(root) {
     var strip = root.querySelector(".zcf-strip"); if (!strip) return
     var stations = [].slice.call(strip.querySelectorAll(":scope > .zcf-station"))
@@ -121,10 +157,11 @@ body { margin: 0; font-family: system-ui, sans-serif; }
       if (isStart) { st.classList.add("zcf-rowstart"); var lampX = st.offsetLeft + 17; st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 4) + "px"); st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 2) + "px") }
       prevTop = top
     })
+    drawWrapArcs(strip)
   }
   function zcfAll() { document.querySelectorAll(".zcf-card").forEach(zcfMeasure) }
   window.addEventListener("load", zcfAll)
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(zcfAll)
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { zcfAll(); requestAnimationFrame(zcfAll) })
   window.addEventListener("resize", zcfAll)
 })()
 </script>

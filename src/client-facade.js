@@ -32,7 +32,9 @@ window.__ModuleLoader__.load({
       const [tick, setTick] = useState(0)
       const rootRef = useRef(null)
       const osRef = useRef(null)
+      const modelRef = useRef(null)
       osRef.current = props?.openSession
+      modelRef.current = null // 渲染期先置空，下方 useMemo 后立即回填
       useEffect(() => {
         const bump = () => setTick((x) => x + 1)
         metaStore.listeners.add(bump)
@@ -101,6 +103,7 @@ window.__ModuleLoader__.load({
             }
             prevTop = top
           })
+          drawWrapArcs(strip, stations, modelRef.current?.arcs ?? [])
         }
         measure()
         const ro = new ResizeObserver(measure)
@@ -110,8 +113,11 @@ window.__ModuleLoader__.load({
       const [err, setErr] = useState(null)
       const model = useMemo(() => {
         try {
-          return { ok: true, m: modelFromRunNode(node, metaFor(node?.data?.name)) }
+          const m = modelFromRunNode(node, metaFor(node?.data?.name))
+          modelRef.current = m
+          return { ok: true, m }
         } catch (e) {
+          modelRef.current = null
           return { ok: false, m: { name: node?.data?.name ?? "?", status: "pending", word: "", tone: "pending", stations: [], progress: null, phaseCount: 0, agentsTotal: 0, agentsRunning: 0, maxTrack: 0, bands: [] }, err: String(e) }
         }
       }, [node, tick])

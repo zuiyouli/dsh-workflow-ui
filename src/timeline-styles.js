@@ -50,6 +50,12 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-lamp.is-ongoing { left: 10px; top: 5px; width: 14px; height: 14px; }
 .zcf-band-svg { display: none; }
 .zcf-arcs-svg { display: none; position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+/* 换行模式动态弧层：JS 测量后填充，仅多排时显示 */
+.zcf-arcs-wrap { display: none; position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.zcf-arcs-wrap path { fill: none; }
+@container zcf (min-width: 920px) {
+  .zcf-arcs-wrap { display: none !important; }
+}
 @container zcf (min-width: 920px) {
   .zcf-strip { padding-top: calc(var(--zcf-raise, 0px) + var(--zcf-air, 0px)); flex-wrap: nowrap; }
   .zcf-raise-1 { transform: translateY(-44px); }

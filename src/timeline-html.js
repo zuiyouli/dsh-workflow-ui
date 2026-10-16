@@ -100,7 +100,7 @@ export function renderTimelineHTML(m, opts = {}) {
   const maxT = m.maxTrack || 0
   // 空气层：弧最低道再留 12px 灯半径余量（报告 §3.5 行布局的 air 简化版）
   const air = m.arcLanes > 0 ? 42 + 14 * (m.arcLanes - 1) : 0
-  const stripStyle = ` style="--zcf-raise:${maxT * 44}px${air ? `;--zcf-air:${air}px` : ""}"`
+  const stripStyle = ` style="--zcf-raise:${maxT * 44}px${air ? `;--zcf-air:${air}px` : ""}" data-arcs="${escapeHtml(JSON.stringify(m.arcs ?? []))}"`
   // 轨心 y（strip 坐标）：空气 + 抬升 − 轨道偏移 + 灯心 12
   const railY = (i) => air + maxT * 44 - 44 * (m.stations[i].track ?? 0) + 12
   // ── 弧 SVG（报告 §4.2：8px 圆角拐点 + 箭头 marker；pointer-events-none 防吞悬停）──
@@ -147,7 +147,66 @@ export function renderTimelineHTML(m, opts = {}) {
   }
   return `<div class="zcf-root"><div class="zcf-card">${head(m)}<div class="zcf-plot"><div class="zcf-strip"${stripStyle}>
     ${arcSvg}
+    <svg class="zcf-arcs-wrap" fill="none" aria-hidden="true"></svg>
     ${svgs}
     ${m.stations.map((s, i) => station(s, i, m.stations[i + 1]?.seg, opts.expanded)).join("")}
   </div></div></div></div>`
+}
+
+/** 正交折线路径 + 圆角拐点（pts 为轴对齐路标点序列） */
+export function orthPath(pts, r = 6) {
+  let d = `M ${pts[0][0]} ${pts[0][1]}`
+  for (let i = 1; i < pts.length - 1; i++) {
+    const px = pts[i - 1][0], py = pts[i - 1][1]
+    const cx = pts[i][0], cy = pts[i][1]
+    const nx = pts[i + 1][0], ny = pts[i + 1][1]
+    const d1x = Math.sign(cx - px), d1y = Math.sign(cy - py)
+    const d2x = Math.sign(nx - cx), d2y = Math.sign(ny - cy)
+    const len1 = Math.abs(cx - px) + Math.abs(cy - py)
+    const len2 = Math.abs(nx - cx) + Math.abs(ny - cy)
+    const rr = Math.max(0, Math.min(r, len1 / 2, len2 / 2))
+    d += ` L ${cx - d1x * rr} ${cy - d1y * rr} Q ${cx} ${cy} ${cx + d2x * rr} ${cy + d2y * rr}`
+  }
+  const last = pts[pts.length - 1]
+  return d + ` L ${last[0]} ${last[1]}`
+}
+
+/** 换行模式的动态弧线层：测量后绘制。同排 → 经典上空弧；跨排 → 行间隙走廊 + 左右边缘干线（回边左、前向右，弧道错开）。
+ *  strip: .zcf-strip 元素；stationEls: 按模型顺序的 .zcf-station 元素列表；arcs: 模型弧数组。多排时给 strip 预留 30px 顶部走廊。 */
+export function drawWrapArcs(strip, stationEls, arcs) {
+  const svg = strip.querySelector(":scope > .zcf-arcs-wrap")
+  if (!svg) return
+  const multi = stationEls.length > 1 && stationEls.some((st) => st.offsetTop !== stationEls[0].offsetTop)
+  if (!multi || !Array.isArray(arcs) || arcs.length === 0) {
+    svg.style.display = "none"
+    svg.innerHTML = ""
+    strip.style.paddingTop = ""
+    return
+  }
+  strip.style.paddingTop = "30px" // 行 0 上方的走廊空气（RO 幂等重测）
+  const W = strip.clientWidth, H = strip.offsetHeight
+  const pos = stationEls.map((st) => ({ x: st.offsetLeft + 17, y: st.offsetTop + 12, top: st.offsetTop }))
+  let defs = "<defs>" + ["faint", "strong", "march"].map((k) => `<marker id="zcf-wmk-${k}" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ${k}" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>`).join("") + "</defs>"
+  const paths = []
+  for (const a of arcs) {
+    const p1 = pos[a.from], p2 = pos[a.to]
+    let d
+    if (p1.top === p2.top) {
+      const ly = p1.top - 26 - 14 * a.lane
+      d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8)
+    } else {
+      const edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
+      d = orthPath(
+        [[p1.x, p1.y - 5], [p1.x, rowTop(a.from) - 16], [edgeX, rowTop(a.from) - 16], [edgeX, rowTop(a.to) - 16], [p2.x, rowTop(a.to) - 16], [p2.x, p2.y - 5]],
+        6,
+      )
+    }
+    paths.push(`<path class="zcf-arc-ink ${a.ink}" marker-end="url(#zcf-wmk-${a.ink})" d="${d}"/>`)
+  }
+  function rowTop(i) { return pos[i].top }
+  svg.setAttribute("width", W)
+  svg.setAttribute("height", H)
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`)
+  svg.innerHTML = defs + paths.join("")
+  svg.style.display = "block"
 }

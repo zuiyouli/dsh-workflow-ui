@@ -3,7 +3,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { scanScript } from "../src/script-scan.js"
 import { buildTimeline, normRunStatus, modelFromRunNode, modelFromToolCall } from "../src/timeline-model.js"
-import { renderTimelineHTML } from "../src/timeline-html.js"
+import { renderTimelineHTML, orthPath } from "../src/timeline-html.js"
 
 test("normRunStatus maps the five run words", () => {
   assert.equal(normRunStatus("running"), "running")
@@ -124,6 +124,15 @@ test("modelFromRunNode: interrupted projection keeps station running", () => {
   assert.equal(m.status, "interrupted")
   assert.equal(m.word, "已中断")
   assert.equal(m.stations[0].status, "running")
+})
+
+test("orthPath: rounded orthogonal elbows with clamped radius", () => {
+  const d = orthPath([[10, 100], [10, 50], [200, 50], [200, 20]])
+  assert.match(d, /^M 10 100/)
+  assert.match(d, /L 10 56 Q 10 50 16 50/) // 6px 圆角（垂直转水平）
+  assert.match(d, /Q 200 50 200 44/) // 末端转垂直
+  const tight = orthPath([[0, 0], [0, 4], [6, 4]], 8) // 短边夹紧半径
+  assert.match(tight, /Q 0 4 2 4/)
 })
 
 test("modelFromToolCall: compact fallback with name from result text", () => {
