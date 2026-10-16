@@ -1,4 +1,4 @@
-// smoke.mjs — dsh-zcode-flow 渲染冒烟测试（假 ModuleLoader + 假 slots/react）
+// smoke.mjs — dsh-workflow-ui 渲染冒烟测试（假 ModuleLoader + 假 slots/react）
 globalThis.window = {
   __ModuleLoader__: {
     load(def) {

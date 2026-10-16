@@ -16,7 +16,7 @@ const t = globalThis.__zcf.__test
 
 // 运行中：站1 done、站2 done、站3 running（1 药丸转圈）——对齐用户 demo-3 场景
 const running = t.buildTimeline(
-  { name: "zcode-flow-demo-3", phases: [{ title: "独立诊断并确认根因" }, { title: "实现修复并过门禁" }, { title: "验收并交付" }] },
+  { name: "workflow-ui-demo-3", phases: [{ title: "独立诊断并确认根因" }, { title: "实现修复并过门禁" }, { title: "验收并交付" }] },
   { status: "running", activePhase: "验收并交付", agents: [
     { label: "根因诊断员", phase: "独立诊断并确认根因", status: "done" },
     { label: "实现工程师", phase: "实现修复并过门禁", status: "done" },
@@ -27,7 +27,7 @@ const running = t.buildTimeline(
 )
 // 已完成
 const completed = t.buildTimeline(
-  { name: "zcode-flow-demo-2", phases: [{ title: "侦察" }, { title: "汇总" }] },
+  { name: "workflow-ui-demo-2", phases: [{ title: "侦察" }, { title: "汇总" }] },
   { status: "completed", agents: [
     { label: "侧板", phase: "侦察", status: "done" },
     { label: "弧线", phase: "侦察", status: "done" },
@@ -35,7 +35,7 @@ const completed = t.buildTimeline(
   ] },
 )
 // 工具行一行摘要（新形态）
-const toolRow = t.renderTimelineHTML(t.modelFromToolCall({ phase: "result", isError: false, content: 'workflow "zcode-flow-demo-3" completed (5 agents).' }))
+const toolRow = t.renderTimelineHTML(t.modelFromToolCall({ phase: "result", isError: false, content: 'workflow "workflow-ui-demo-3" completed (5 agents).' }))
 
 // 并行带：方案-解析 ∥ 方案-容错（alongside），fork/merge 抬轨
 const banded = t.buildTimeline(
@@ -61,17 +61,17 @@ const looped = t.buildTimeline(
 
 // 多药丸卡：9 个子代理挤同一站（真实单阶段并行形态）→ 折叠 + ＋N
 const many = t.buildTimeline(
-  { name: "lh007926-requirement-recon", phases: [{ title: "并行深挖" }, { title: "对抗核验" }, { title: "综合" }] },
+  { name: "many-pills-demo", phases: [{ title: "并行深挖" }, { title: "对抗核验" }, { title: "综合" }] },
   { status: "running", activePhase: "并行深挖", agents: [
-    { label: "F 定时任务框架", phase: "并行深挖", status: "running" },
-    { label: "G 音频与文件上传", phase: "并行深挖", status: "done" },
-    { label: "D 前端安灯模块", phase: "并行深挖", status: "done" },
-    { label: "E 静电 ESD 标准功能", phase: "并行深挖", status: "done" },
-    { label: "B 安灯与音柱联动", phase: "并行深挖", status: "done" },
-    { label: "A 音柱子系统全貌", phase: "并行深挖", status: "done" },
-    { label: "H 音柱硬件协议", phase: "并行深挖", status: "done" },
-    { label: "C 后端扩展点", phase: "并行深挖", status: "done" },
-    { label: "I 数据库/迁移", phase: "并行深挖", status: "pending" },
+    { label: "子任务-F", phase: "并行深挖", status: "running" },
+    { label: "子任务-G", phase: "并行深挖", status: "done" },
+    { label: "子任务-D", phase: "并行深挖", status: "done" },
+    { label: "子任务-E", phase: "并行深挖", status: "done" },
+    { label: "子任务-B", phase: "并行深挖", status: "done" },
+    { label: "子任务-A", phase: "并行深挖", status: "done" },
+    { label: "子任务-H", phase: "并行深挖", status: "done" },
+    { label: "子任务-C", phase: "并行深挖", status: "done" },
+    { label: "子任务-I", phase: "并行深挖", status: "pending" },
   ] },
 )
 

@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2026-10-15
 
-First public release (previously developed privately as `dsh-zcode-flow`).
+First public release.
 
 - Station pill overflow collapses behind a `+N` expander (single-phase runs
   with many agents).
