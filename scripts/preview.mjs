@@ -1,5 +1,5 @@
 // preview.mjs — 本地无头浏览器预览：跑模型 → 生成 preview.html（亮/暗两块）
-import { writeFileSync } from "node:fs"
+import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -130,5 +130,6 @@ body { margin: 0; font-family: system-ui, sans-serif; }
 </script>
 </body></html>`
 const out = join(root, "docs", "preview", "preview.html")
+mkdirSync(dirname(out), { recursive: true }) // CI 全新检出无 docs/preview（已 gitignore）
 writeFileSync(out, html)
 console.log("wrote", out)
