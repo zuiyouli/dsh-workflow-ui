@@ -12,7 +12,6 @@ const RUN_WORDS = {
   cancelled: { word: "已取消", tone: "stopped" },
   interrupted: { word: "已中断", tone: "stopped" },
 }
-const PILL_WORDS = { pending: "待运行", running: "运行中", done: "已完成", failed: "失败", cancelled: "已取消", interrupted: "已中断" }
 
 export function normRunStatus(s) {
   switch (s) {

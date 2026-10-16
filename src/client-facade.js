@@ -103,7 +103,7 @@ window.__ModuleLoader__.load({
             }
             prevTop = top
           })
-          drawWrapArcs(strip, stations, modelRef.current?.arcs ?? [])
+          layoutArcLayers(strip, stations, modelRef.current)
         }
         measure()
         const ro = new ResizeObserver(measure)

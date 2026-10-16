@@ -60,8 +60,7 @@ const looped = t.buildTimeline(
 )
 
 // 多药丸卡：9 个子代理挤同一站（真实单阶段并行形态）→ 折叠 + ＋N
-const many = t.buildTimeline(
-  { name: "many-pills-demo", phases: [{ title: "并行深挖" }, { title: "对抗核验" }, { title: "综合" }] },
+const many = t.buildTimeline(  { name: "many-pills-demo", phases: [{ title: "并行深挖" }, { title: "对抗核验" }, { title: "综合" }] },
   { status: "running", activePhase: "并行深挖", agents: [
     { label: "子任务-F", phase: "并行深挖", status: "running" },
     { label: "子任务-G", phase: "并行深挖", status: "done" },
@@ -72,6 +71,16 @@ const many = t.buildTimeline(
     { label: "子任务-H", phase: "并行深挖", status: "done" },
     { label: "子任务-C", phase: "并行深挖", status: "done" },
     { label: "子任务-I", phase: "并行深挖", status: "failed" },
+  ] },
+)
+
+// 单排窄卡：3 站 + 澄清→验收 跳边（<920 但单排 → 静态层 + 内联 air/raise）
+const tiny = t.buildTimeline(
+  { name: "tiny-loop-demo", phases: [{ title: "澄清" }, { title: "实现" }, { title: "验收" }], edges: [["澄清", "实现"], ["实现", "验收"], ["澄清", "验收"]] },
+  { status: "running", activePhase: "验收", agents: [
+    { label: "澄清员", phase: "澄清", status: "done" },
+    { label: "实现员", phase: "实现", status: "done" },
+    { label: "验收员", phase: "验收", status: "running" },
   ] },
 )
 
@@ -104,6 +113,7 @@ body { margin: 0; font-family: system-ui, sans-serif; }
 <div class="wrap">${t.renderTimelineHTML(completed)}</div>
 <div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(looped)}</div>
 <div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(banded)}</div>
+<div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(tiny)}</div>
 <div class="wrap">${toolRow}</div>
 <div class="wrap dark"><div class="dark-sim">${t.renderTimelineHTML(running)}<div class="wrap" style="padding:12px 0 0">${t.renderTimelineHTML(banded)}</div></div></div>
 <script>
@@ -119,28 +129,41 @@ body { margin: 0; font-family: system-ui, sans-serif; }
     }
     return d + " L " + pts[pts.length - 1][0] + " " + pts[pts.length - 1][1]
   }
-  function drawWrapArcs(strip) {
+  function drawWrapArcs(strip) { // demo 副本：保持与 src layoutArcLayers 同步
     var svg = strip.querySelector(":scope > .zcf-arcs-wrap"); if (!svg) return
+    var ssvg = strip.querySelector(":scope > .zcf-arcs-svg")
+    if (!svg || !ssvg) return // 无弧模型的卡没有静态层
     var arcs = JSON.parse(strip.getAttribute("data-arcs") || "[]")
+    var card = strip.closest(".zcf-card")
+    var wide = ((card ? card.clientWidth : 9999) - 28) >= 920
     var stations = [].slice.call(strip.querySelectorAll(":scope > .zcf-station"))
     var multi = stations.length > 1 && stations.some(function (st) { return st.offsetTop !== stations[0].offsetTop })
-    if (!multi || !arcs.length) { svg.style.display = "none"; svg.innerHTML = ""; strip.style.paddingTop = ""; return }
-    strip.style.paddingTop = "30px"
-    var W = strip.clientWidth, H = strip.offsetHeight
-    var pos = stations.map(function (st) { return { x: st.offsetLeft + 17, y: st.offsetTop + 12, top: st.offsetTop } })
-    var defs = "<defs>" + ["faint", "strong", "march"].map(function (k) { return '<marker id="zcf-wmk-' + k + '" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ' + k + '" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>' }).join("") + "</defs>"
-    var paths = []
-    arcs.forEach(function (a) {
-      var p1 = pos[a.from], p2 = pos[a.to], d
-      if (p1.top === p2.top) { var ly = p1.top - 26 - 14 * a.lane; d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8) }
-      else {
-        var edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
-        d = orthPath([[p1.x, p1.y - 5], [p1.x, pos[a.from].top - 16], [edgeX, pos[a.from].top - 16], [edgeX, pos[a.to].top - 16], [p2.x, pos[a.to].top - 16], [p2.x, p2.y - 5]], 6)
-      }
-      paths.push('<path class="zcf-arc-ink ' + a.ink + '" marker-end="url(#zcf-wmk-' + a.ink + ')" d="' + d + '"/>')
-    })
-    svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", "0 0 " + W + " " + H)
-    svg.innerHTML = defs + paths.join(""); svg.style.display = "block"
+    if (wide) { svg.style.display = "none"; ssvg.style.display = ""; strip.style.paddingTop = ""; return }
+    if (multi) {
+      ssvg.style.display = "none"
+      strip.style.paddingTop = "30px"
+      var W = strip.clientWidth, H = strip.offsetHeight
+      var pos = stations.map(function (st) { return { x: st.offsetLeft + 17, y: st.offsetTop + 12, top: st.offsetTop } })
+      var defs = "<defs>" + ["faint", "strong", "march"].map(function (k) { return '<marker id="zcf-wmk-' + k + '" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ' + k + '" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>' }).join("") + "</defs>"
+      var paths = []
+      arcs.forEach(function (a) {
+        var p1 = pos[a.from], p2 = pos[a.to], d
+        if (p1.top === p2.top) { var ly = p1.top - 26 - 14 * a.lane; d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8) }
+        else {
+          var edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
+          d = orthPath([[p1.x, p1.y - 5], [p1.x, pos[a.from].top - 16], [edgeX, pos[a.from].top - 16], [edgeX, pos[a.to].top - 16], [p2.x, pos[a.to].top - 16], [p2.x, p2.y - 5]], 6)
+        }
+        paths.push('<path class="zcf-arc-ink ' + a.ink + '" marker-end="url(#zcf-wmk-' + a.ink + ')" d="' + d + '"/>')
+      })
+      svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", "0 0 " + W + " " + H)
+      svg.innerHTML = defs + paths.join(""); svg.style.display = "block"
+      return
+    }
+    if (arcs.length) {
+      var lanes = 0; arcs.forEach(function (a) { lanes = Math.max(lanes, a.lane + 1) })
+      ssvg.style.display = "block"; svg.style.display = "none"
+      strip.style.paddingTop = (lanes > 0 ? 42 + 14 * (lanes - 1) : 0) + "px"
+    } else { ssvg.style.display = ""; svg.style.display = "none"; strip.style.paddingTop = "" }
   }
   function zcfMeasure(root) {
     var strip = root.querySelector(".zcf-strip"); if (!strip) return
