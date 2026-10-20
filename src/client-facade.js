@@ -58,6 +58,14 @@ window.__ModuleLoader__.load({
         metaStore.listeners.add(bump)
         return () => metaStore.listeners.delete(bump)
       }, [])
+      // 入场动画只播一次：挂载加 zcf-boot，~1s 后移除（事件流重渲染不再重播动画 → 防闪烁）
+      useEffect(() => {
+        const root = rootRef.current
+        if (!root || !root.classList) return
+        root.classList.add("zcf-boot")
+        const t = setTimeout(() => root.classList.remove("zcf-boot"), 900)
+        return () => clearTimeout(t)
+      }, [])
       // 药丸交互：根节点上挂一次委托（innerHTML 重渲染不丢监听）——折叠片切换 + 子会话跳转
       useEffect(() => {
         const root = rootRef.current
@@ -113,14 +121,14 @@ window.__ModuleLoader__.load({
             const isStart = prevTop !== null && prevTop !== top
             if (isEnd) {
               st.classList.add("zcf-rowend")
-              const extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 2)
+              const extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 18) // 让出边缘 18px 弧线干道
               st.style.setProperty("--zcf-rowext", extra + "px")
             }
             if (isStart) {
               st.classList.add("zcf-rowstart")
               const lampX = st.offsetLeft + 17
-              st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 4) + "px")
-              st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 2) + "px")
+              st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 20) + "px")
+              st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 18) + "px")
             }
             prevTop = top
           })

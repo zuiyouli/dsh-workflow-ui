@@ -198,7 +198,7 @@ export function layoutArcLayers(strip, stationEls, m) {
         const ly = p1.top - 26 - 14 * a.lane
         d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8)
       } else {
-        const edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
+        const edgeX = a.loop ? 4 + 5 * a.lane : W - 4 - 5 * a.lane // 干线走预留的 18px 外带
         d = orthPath(
           [[p1.x, p1.y - 5], [p1.x, rowTop(a.from) - 16], [edgeX, rowTop(a.from) - 16], [edgeX, rowTop(a.to) - 16], [p2.x, rowTop(a.to) - 16], [p2.x, p2.y - 5]],
           6,

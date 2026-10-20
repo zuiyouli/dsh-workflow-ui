@@ -105,7 +105,9 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-station-meta { font-family: var(--dsw-font-mono, ui-monospace, monospace); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-foreground-subtlest); flex: none; margin-left: -1px; }
 /* ── 药丸列：32px 高、间距 6、依次落地 ── */
 .zcf-pills { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 2px; padding-left: 8px; }
-.zcf-pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--color-surface); max-width: 160px; animation: zcf-arrive var(--wf-t-enter) var(--wf-ease) backwards; animation-delay: var(--zcf-d, 0ms); transition: background var(--wf-t-fast) var(--wf-ease); }
+.zcf-pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--color-surface); max-width: 160px; transition: background var(--wf-t-fast) var(--wf-ease); }
+/* 入场动画只播一次：zcf-boot 由组件挂载时加上、~1s 后移除——事件流重渲染不重播（防闪烁） */
+.zcf-boot .zcf-pill { animation: zcf-arrive var(--wf-t-enter) var(--wf-ease) backwards; animation-delay: var(--zcf-d, 0ms); }
 .zcf-pill:hover { background: var(--color-surface-hover); }
 @keyframes zcf-arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .zcf-avatar { width: 18px; height: 18px; border-radius: 6px; flex: none; background: var(--wf-avatar, var(--color-rail)); position: relative; }

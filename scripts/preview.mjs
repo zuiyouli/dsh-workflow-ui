@@ -150,7 +150,7 @@ body { margin: 0; font-family: system-ui, sans-serif; }
         var p1 = pos[a.from], p2 = pos[a.to], d
         if (p1.top === p2.top) { var ly = p1.top - 26 - 14 * a.lane; d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8) }
         else {
-          var edgeX = a.loop ? 2 + 5 * a.lane : W - 2 - 5 * a.lane
+          var edgeX = a.loop ? 4 + 5 * a.lane : W - 4 - 5 * a.lane
           d = orthPath([[p1.x, p1.y - 5], [p1.x, pos[a.from].top - 16], [edgeX, pos[a.from].top - 16], [edgeX, pos[a.to].top - 16], [p2.x, pos[a.to].top - 16], [p2.x, p2.y - 5]], 6)
         }
         paths.push('<path class="zcf-arc-ink ' + a.ink + '" marker-end="url(#zcf-wmk-' + a.ink + ')" d="' + d + '"/>')
@@ -176,8 +176,8 @@ body { margin: 0; font-family: system-ui, sans-serif; }
       var i = stations.indexOf(st); var next = stations[i + 1]
       var isEnd = next ? next.offsetTop !== top : false
       var isStart = prevTop !== null && prevTop !== top
-      if (isEnd) { st.classList.add("zcf-rowend"); var extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 2); st.style.setProperty("--zcf-rowext", extra + "px") }
-      if (isStart) { st.classList.add("zcf-rowstart"); var lampX = st.offsetLeft + 17; st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 4) + "px"); st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 2) + "px") }
+      if (isEnd) { st.classList.add("zcf-rowend"); var extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 18); st.style.setProperty("--zcf-rowext", extra + "px") }
+      if (isStart) { st.classList.add("zcf-rowstart"); var lampX = st.offsetLeft + 17; st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 20) + "px"); st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 18) + "px") }
       prevTop = top
     })
     drawWrapArcs(strip)
