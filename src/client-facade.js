@@ -33,12 +33,10 @@ window.__ModuleLoader__.load({
       const rootRef = useRef(null)
       const osRef = useRef(null)
       const sidRef = useRef(null)
-      const usRef = useRef(null)
       const modelRef = useRef(null)
       osRef.current = props?.openSession
       sidRef.current = props?.sessionId
-      usRef.current = props?.useSessions
-      // 0.2.1 契约：mode 在点击时经 useSessions 现查（不在渲染期调用——store hook 渲染期抛错会整树回退官方）
+      // 0.2.1 契约：mode 在点击时传 "unknown"，由 uiWorkspace 按子会话目录身份自行解析
       modelRef.current = null // 渲染期先置空，下方 useMemo 后立即回填
       useEffect(() => {
         const bump = () => setTick((x) => x + 1)
@@ -61,16 +59,8 @@ window.__ModuleLoader__.load({
           const id = link.dataset.child
           const os = osRef.current
           if (!id || typeof os !== "function") return
-          let mode = "one-shot"
-          try { // 0.2.1：点击时现查子代理投影 mode（running + 本会话直系才有值）
-            const m = usRef.current((sessions) => {
-              const child = sessions?.byId?.[id]
-              const identity = sessions?.projectionsBySession?.[id]?.values?.subagent
-              return child?.parentId === sidRef.current && identity != null ? identity.mode : null
-            }, (a, b) => a === b)
-            if (m) mode = m
-          } catch { /* 查询失败回退 one-shot */ }
-          try { os({ parentSessionId: sidRef.current, childSessionId: id, mode }) } catch { try { os(id) } catch { /* 跳转失败静默 */ } }
+          // 0.2.1：mode 传 "unknown" = 由 uiWorkspace 按子会话目录身份自行解析（传猜测值会触发 subagent/unauthorized）
+          try { os({ parentSessionId: sidRef.current, childSessionId: id, mode: "unknown" }) } catch { try { os(id) } catch { /* 跳转失败静默 */ } }
         }
         const onClick = (e) => {
           const link = e.target && e.target.closest ? e.target.closest(".zcf-pill.is-link") : null
