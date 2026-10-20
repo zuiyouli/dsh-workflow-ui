@@ -19,6 +19,7 @@ English documentation in [README.md](README.md)。
 - **DSH 官方图标** — StateDot 状态点（done/error = 6px 实心核，running = 中性 spinner 弧，pending = idle 点）、官方 ListPen 卡头图标、1px Check/Close 标记。
 - **子代理药丸** — 逐 agent 状态 + 表情（运行中张望/眨眼），结算勾，未启动的计划占位。
 - **主题与无障碍** — 经 DSH 别名 token 适配亮/暗主题，全链路尊重 `prefers-reduced-motion`，状态字形带 `aria` 标签。
+- **自带 agent 预设** — 安装即向名册添加 `Workflow 编排` 预设（标准全量工具 + "多步任务主动用 workflow"的 persona 指引），卸载即移除。
 
 ## 安装
 

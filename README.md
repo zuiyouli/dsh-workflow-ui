@@ -19,6 +19,7 @@ An in-conversation workflow run timeline for the [DeepSeek Harness](https://gith
 - **DSH-native iconography** — StateDot status dots (6px core for done/error, neutral spinner arc for running, idle dot for pending), official ListPen header icon, 1px Check/Close marks.
 - **Agent pills** — per-agent status with face expressions (glance/blink while running), settled check marks, planned placeholders for agents that have not started.
 - **Theme + a11y** — light/dark via DSH alias tokens, `prefers-reduced-motion` honored everywhere, `aria` labels on status glyphs.
+- **Ships its own agent preset** — installing adds a `Workflow 编排` preset to the roster (full standard toolset plus a persona nudge that makes the model proactively orchestrate multi-step tasks with `workflow`); uninstalling removes it.
 
 ## Install
 
