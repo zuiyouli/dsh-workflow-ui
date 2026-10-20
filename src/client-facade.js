@@ -115,14 +115,14 @@ window.__ModuleLoader__.load({
             const isStart = prevTop !== null && prevTop !== top
             if (isEnd) {
               st.classList.add("zcf-rowend")
-              const extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 18) // 让出边缘 18px 弧线干道
+              const extra = Math.max(0, strip.clientWidth - (st.offsetLeft + st.offsetWidth) - 2)
               st.style.setProperty("--zcf-rowext", extra + "px")
             }
             if (isStart) {
               st.classList.add("zcf-rowstart")
               const lampX = st.offsetLeft + 17
-              st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 20) + "px")
-              st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 18) + "px")
+              st.style.setProperty("--zcf-rowpre", Math.max(0, lampX - 4) + "px")
+              st.style.setProperty("--zcf-rowpre-ml", -(st.offsetLeft - 2) + "px")
             }
             prevTop = top
           })

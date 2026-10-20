@@ -168,7 +168,7 @@ export function orthPath(pts, r = 6) {
 }
 
 /** 弧层布局总控：宽屏 = 静态层（CSS 管），交还样式表；窄屏单排 = 静态层 + air/raise 内联 padding；
- *  窄屏多排 = 动态边缘走廊层。stationEls 按模型顺序。 */
+ *  窄屏多排 = 只画同排弧（跨排长弧不画线，回边由 ↩ 徽标承担——边缘干线在复杂工作流下会穿排成乱麻）。stationEls 按模型顺序。 */
 export function layoutArcLayers(strip, stationEls, m) {
   const wrapSvg = strip.querySelector(":scope > .zcf-arcs-wrap")
   const staticSvg = strip.querySelector(":scope > .zcf-arcs-svg")
@@ -183,34 +183,26 @@ export function layoutArcLayers(strip, stationEls, m) {
     return
   }
   const multi = stationEls.length > 1 && stationEls.some((st) => st.offsetTop !== stationEls[0].offsetTop)
-  if (multi) { // 动态边缘走廊
+  if (multi) { // 多排：仅同排弧
     staticSvg.style.display = "none"
-    strip.style.paddingTop = "30px" // 行 0 上方的走廊空气（RO 幂等重测）
-    const W = strip.clientWidth, H = strip.offsetHeight
+    const drawableFilter = (posMap) => arcs.filter((a) => posMap[a.from].top === posMap[a.to].top)
+    strip.style.paddingTop = "30px" // 首排上空的弧道空气（先设 padding 再测，RO 幂等）
     const trackOf = (st) => { const mm = /zcf-raise-(\d)/.exec(st.className); return mm ? +mm[1] : 0 }
     const pos = stationEls.map((st) => { const t = trackOf(st); return { x: st.offsetLeft + 17, y: st.offsetTop + 12 - 44 * t, top: st.offsetTop - 44 * t } })
-    let defs = "<defs>" + ["faint", "strong", "march"].map((k) => `<marker id="zcf-wmk-${k}" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ${k}" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>`).join("") + "</defs>"
-    const paths = []
-    for (const a of arcs) {
+    const drawable = drawableFilter(pos)
+    if (drawable.length === 0) { wrapSvg.style.display = "none"; wrapSvg.innerHTML = ""; strip.style.paddingTop = ""; return }
+    const W = strip.clientWidth, H = strip.offsetHeight
+    const defs = "<defs>" + ["faint", "strong", "march"].map((k) => `<marker id="zcf-wmk-${k}" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path class="zcf-arc-mk ${k}" d="M0,0.5 L7,4 L0,7.5 Z"/></marker>`).join("") + "</defs>"
+    const paths = drawable.map((a) => {
       const p1 = pos[a.from], p2 = pos[a.to]
-      let d
-      if (p1.top === p2.top) {
-        const ly = p1.top - 26 - 14 * a.lane
-        d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8)
-      } else {
-        const edgeX = a.loop ? 4 + 5 * a.lane : W - 4 - 5 * a.lane // 干线走预留的 18px 外带
-        d = orthPath(
-          [[p1.x, p1.y - 5], [p1.x, rowTop(a.from) - 16], [edgeX, rowTop(a.from) - 16], [edgeX, rowTop(a.to) - 16], [p2.x, rowTop(a.to) - 16], [p2.x, p2.y - 5]],
-          6,
-        )
-      }
-      paths.push(`<path class="zcf-arc-ink ${a.ink}" marker-end="url(#zcf-wmk-${a.ink})" d="${d}"/>`)
-    }
-    function rowTop(i) { return pos[i].top }
+      const ly = p1.top - 26 - 14 * a.lane
+      const d = orthPath([[p1.x, p1.y - 5], [p1.x, ly], [p2.x, ly], [p2.x, p2.y - 5]], 8)
+      return `<path class="zcf-arc-ink ${a.ink}" marker-end="url(#zcf-wmk-${a.ink})" d="${d}"/>`
+    }).join("")
     wrapSvg.setAttribute("width", W)
     wrapSvg.setAttribute("height", H)
     wrapSvg.setAttribute("viewBox", `0 0 ${W} ${H}`)
-    wrapSvg.innerHTML = defs + paths.join("")
+    wrapSvg.innerHTML = defs + paths
     wrapSvg.style.display = "block"
     return
   }
