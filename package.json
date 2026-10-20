@@ -1,6 +1,6 @@
 {
   "name": "dsh-workflow-ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "In-conversation workflow run timeline for the DeepSeek Harness web GUI: horizontal rail with phase stations, agent pills, loop arcs and parallel bands, replacing the stock workflow tool card and workflow-run chat node. Planned stations render before the run starts, from client-side script scanning.",
   "type": "module",
   "main": "lib/index.js",
