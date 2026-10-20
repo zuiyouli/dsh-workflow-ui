@@ -19,6 +19,8 @@ const ICON_PLAN = DSH_ICON(
 // IconCheckOutlineRegular / IconCloseOutlineRegular（药丸结算标记）
 const ICON_CHECK = DSH_ICON(P("M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4"), 12)
 const ICON_CLOSE = DSH_ICON(P("M2.5 2.5L13.5 13.5") + P("M13.5 2.5L2.5 13.5"), 12)
+// 折叠按钮 chevron(简形 v 形,旋转由 CSS 管)
+const ICON_CHEV = `<svg class="zcf-chev" width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // StateDot（官方状态点：done/warning/error/idle = 10px slot 6px core；ongoing = 14px 双圆 spinner）
 function stateDot(state) {
   if (state === "ongoing") {
@@ -69,14 +71,45 @@ function station(s, i, nextSeg, expandedSet) {
   </div>`
 }
 
-function head(m) {
+/** ms → 紧凑中文时长;与 timeline-model 的 fmtDuration 同步(build 注入前各自独立) */
+function fmtDur(ms) {
+  if (!(ms > 0)) return ""
+  const s = Math.round(ms / 1000)
+  if (s < 60) return `${s}秒`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}分${s % 60 ? (s % 60) + "秒" : ""}`
+  const hh = Math.floor(m / 60)
+  return `${hh}小时${m % 60 ? (m % 60) + "分" : ""}`
+}
+
+function head(m, folded) {
   // ZCode 形态：种类词内嵌状态；紧凑模式（无站点）只留身份（图标+名），状态交给运行卡
   const hasStations = (m.stations?.length ?? 0) > 0
   const runLamp = m.status === "running" ? "running" : m.status === "completed" ? "done" : m.status === "errored" ? "failed" : "pending"
+  // ── v0.3.0 完成态：折叠摘要（阶段/进度/循环/失败/耗时）+ 折叠按钮 ──
+  if (hasStations && m.finished && m.summary) {
+    const s = m.summary
+    const bits = [`${s.phases} 个阶段`, `${s.settled}/${s.total} 子代理`]
+    if (s.loops > 0) bits.push(`↩${s.loops}`)
+    if (s.failed.length > 0) bits.push(`${s.failed.length} 失败`)
+    if (s.duration > 0) bits.push(fmtDur(s.duration))
+    const fails = s.failed.slice(0, 3).map((f) => `${f.station}/${f.label}`).join("、") + (s.failed.length > 3 ? " 等" : "")
+    return `<div class="zcf-head">
+    ${ICON_PLAN}
+    <span class="zcf-kind">工作流${escapeHtml(m.word)}</span>
+    <span class="zcf-name">${escapeHtml(m.name)}</span>
+    <span class="zcf-detail">
+      <span>${bits.join(" · ")}${fails ? `<span class="zcf-fail-bits"> · ${escapeHtml(fails)}</span>` : ""}</span>
+      <span class="zcf-runlamp">${stateDot(LAMP_STATE[runLamp] ?? "idle")}</span>
+    </span>
+    <button type="button" class="zcf-fold" aria-expanded="${folded ? "false" : "true"}" aria-label="${folded ? "展开时间线" : "收起时间线"}">${ICON_CHEV}</button>
+  </div>`
+  }
   const prog = m.progress ? `${m.progress.settled}/${m.progress.total}` : `${m.agentsTotal}`
   const agents = m.status === "running" ? `${prog} 子代理 · ${m.agentsRunning} 工作中` : `${m.agentsTotal} 个子代理`
   const detail = hasStations ? `${m.phaseCount} 个阶段 · ${agents}` : ""
   const kind = hasStations ? `工作流${escapeHtml(m.word)}` : "工作流"
+  const foldBtn = hasStations && m.finished ? `<button type="button" class="zcf-fold" aria-expanded="true" aria-label="收起时间线">${ICON_CHEV}</button>` : ""
   return `<div class="zcf-head">
     ${ICON_PLAN}
     <span class="zcf-kind${hasStations && m.status === "running" ? " is-running" : ""}">${kind}</span>
@@ -85,13 +118,18 @@ function head(m) {
       ${detail ? `<span>${detail}</span>` : ""}
       ${hasStations ? `<span class="zcf-runlamp">${stateDot(LAMP_STATE[runLamp] ?? "idle")}</span>` : ""}
     </span>
+    ${foldBtn}
   </div>`
 }
 
 export function renderTimelineHTML(m, opts = {}) {
   // 无站点 → ZCode 工具行式一行摘要（不画空轨道）
   if (!m.stations || m.stations.length === 0) {
-    return `<div class="zcf-root"><div class="zcf-card zcf-compact">${head(m)}</div></div>`
+    return `<div class="zcf-root"><div class="zcf-card zcf-compact">${head(m, false)}</div></div>`
+  }
+  // v0.3.0 完成态折叠：只渲染 head 摘要行，不画轨道（展开由 zcf-fold 按钮驱动重渲染）
+  if (m.finished && opts.folded) {
+    return `<div class="zcf-root"><div class="zcf-card is-folded" data-folded="true">${head(m, true)}</div></div>`
   }
   const maxT = m.maxTrack || 0
   // 空气层：弧最低道再留 12px 灯半径余量（报告 §3.5 行布局的 air 简化版）
@@ -141,7 +179,7 @@ export function renderTimelineHTML(m, opts = {}) {
       svgs += `<svg class="zcf-band-svg" style="left:${ox}px;top:-${oy}px;width:${joinX - ox + 4}px;height:${oy + 16}px" viewBox="0 0 ${joinX - ox + 4} ${oy + 16}" fill="none" aria-hidden="true">${paths.join("")}</svg>`
     }
   }
-  return `<div class="zcf-root"><div class="zcf-card">${head(m)}<div class="zcf-plot"><div class="zcf-strip"${stripStyle}>
+  return `<div class="zcf-root"><div class="zcf-card">${head(m, false)}<div class="zcf-plot"><div class="zcf-strip"${stripStyle}>
     ${arcSvg}
     <svg class="zcf-arcs-wrap" fill="none" aria-hidden="true"></svg>
     ${svgs}

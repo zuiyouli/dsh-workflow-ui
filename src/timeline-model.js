@@ -56,7 +56,12 @@ export function modelFromRunNode(node, declared) {
   } else {
     agents = proj
   }
-  return buildTimeline({ name: d.name, phases: declaredPhases, alongside, edges: Array.isArray(declared?.edges) ? declared.edges : [] }, { status: d.status, agents })
+  return buildTimeline({ name: d.name, phases: declaredPhases, alongside, edges: Array.isArray(declared?.edges) ? declared.edges : [] }, {
+    status: d.status, agents,
+    // v0.3.0：宽容透传时间字段供复盘耗时（字段名探测：常见 start/end 组合）
+    startedAt: d.startedAt ?? d.startTime ?? d.start,
+    completedAt: d.completedAt ?? d.endedAt ?? d.endTime ?? d.finishedAt,
+  })
 }
 
 /** workflow 工具调用 owner（tool.call.toolview）→ 时间线模型（argsRaw.meta.phases 静态阶段；解析失败降级为一行摘要） */
@@ -205,6 +210,11 @@ export function buildTimeline(meta, run = {}) {
   // 回边目标站标记：换行模式下弧不可见，用徽标提示“此阶段会被后序回访”
   for (const a of arcs) if (a.loop) stations[a.to].loopTarget = true
   const allAgents = stations.flatMap((s) => s.pills)
+  // ── v0.3.0 复盘摘要：完成态判定 + 失败清单 + 循环边数 + 耗时（字段存在才提）──
+  const finished = runStatus !== "pending" && runStatus !== "running"
+  const failed = []
+  for (const s of stations) for (const p of s.pills) if (p.status === "failed") failed.push({ station: s.title, label: p.label })
+  const loops = arcs.filter((a) => a.loop).length
   return {
     name: meta?.name ?? "workflow", status: runStatus, word: rw.word, tone: rw.tone,
     stations,
@@ -217,7 +227,40 @@ export function buildTimeline(meta, run = {}) {
     arcs,
     arcLanes,
     declaredCount: Array.isArray(meta?.phases) ? meta.phases.length : 0,
+    finished,
+    summary: {
+      phases: stations.length,
+      settled, total,
+      loops,
+      failed,
+      duration: extractDuration(run),
+    },
   }
+}
+
+/** 宽容提取耗时：startedAt/startTime/start → completedAt/endedAt/endTime/finishedAt/end；秒/毫秒时间戳或 ISO 均可，缺一边则 null */
+export function extractDuration(run) {
+  const d = run ?? {}
+  const toMs = (v) => {
+    if (v == null) return null
+    if (typeof v === "number") return Number.isFinite(v) ? (v < 1e12 ? v * 1000 : v) : null
+    const t = Date.parse(v)
+    return Number.isFinite(t) ? t : null
+  }
+  const start = toMs(d.startedAt ?? d.startTime ?? d.start)
+  const end = toMs(d.completedAt ?? d.endedAt ?? d.endTime ?? d.finishedAt ?? d.end)
+  return start != null && end != null && end >= start ? end - start : null
+}
+
+/** ms → 紧凑中文时长（<60s 秒；<60min 分秒；其余时分） */
+export function fmtDuration(ms) {
+  if (!(ms > 0)) return ""
+  const s = Math.round(ms / 1000)
+  if (s < 60) return `${s}秒`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}分${s % 60 ? (s % 60) + "秒" : ""}`
+  const hh = Math.floor(m / 60)
+  return `${hh}小时${m % 60 ? (m % 60) + "分" : ""}`
 }
 
 function normPill(s) {

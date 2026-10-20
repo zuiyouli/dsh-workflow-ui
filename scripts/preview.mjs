@@ -37,6 +37,16 @@ const completed = t.buildTimeline(
 // 工具行一行摘要（新形态）
 const toolRow = t.renderTimelineHTML(t.modelFromToolCall({ phase: "result", isError: false, content: 'workflow "workflow-ui-demo-3" completed (5 agents).' }))
 
+// v0.3.0 完成态折叠：带失败 + 回边 + 耗时的复盘卡（折叠/展开两态）
+const finishedRich = t.buildTimeline(
+  { name: "recap-demo", phases: [{ title: "需求澄清" }, { title: "编码实现" }, { title: "验收交付" }], edges: [["验收交付", "需求澄清"]] },
+  { status: "errored", startedAt: "2026-10-20T02:00:00Z", completedAt: "2026-10-20T02:04:30Z", agents: [
+    { label: "需求澄清员", phase: "需求澄清", status: "done" },
+    { label: "编码员", phase: "编码实现", status: "done" },
+    { label: "验收员", phase: "验收交付", status: "failed" },
+  ] },
+)
+
 // 并行带：方案-解析 ∥ 方案-容错（alongside），fork/merge 抬轨
 const banded = t.buildTimeline(
   { name: "banded-demo", phases: [{ title: "需求澄清" }, { title: "方案-解析" }, { title: "方案-容错" }, { title: "编码实现" }], alongside: [["方案-解析", "方案-容错"]] },
@@ -111,6 +121,8 @@ body { margin: 0; font-family: system-ui, sans-serif; }
 <div class="wrap">${t.renderTimelineHTML(looped)}</div>
 <div class="wrap">${t.renderTimelineHTML(banded)}</div>
 <div class="wrap">${t.renderTimelineHTML(completed)}</div>
+<div class="wrap">${t.renderTimelineHTML(finishedRich, { folded: true })}</div>
+<div class="wrap">${t.renderTimelineHTML(finishedRich, { folded: false })}</div>
 <div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(looped)}</div>
 <div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(banded)}</div>
 <div class="wrap narrow" style="max-width:700px">${t.renderTimelineHTML(tiny)}</div>

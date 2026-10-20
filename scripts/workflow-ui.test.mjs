@@ -2,7 +2,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { scanScript } from "../src/script-scan.js"
-import { buildTimeline, normRunStatus, modelFromRunNode, modelFromToolCall } from "../src/timeline-model.js"
+import { buildTimeline, normRunStatus, modelFromRunNode, modelFromToolCall, extractDuration, fmtDuration } from "../src/timeline-model.js"
 import { renderTimelineHTML, orthPath } from "../src/timeline-html.js"
 
 test("normRunStatus maps the five run words", () => {
@@ -141,4 +141,88 @@ test("modelFromToolCall: compact fallback with name from result text", () => {
   assert.ok(h.includes("zcf-compact"))
   assert.ok(!h.includes("zcf-railseg"))
   assert.match(h, /zcf-name">demo-x</)
+})
+
+// ── v0.3.0 复盘摘要与折叠 ──
+test("finished flag and recap summary (failed list, loops, duration)", () => {
+  const m = buildTimeline(
+    { name: "r", phases: [{ title: "A" }, { title: "B" }, { title: "C" }], edges: [["A", "C"], ["C", "A"]] },
+    { status: "errored", startedAt: "2026-10-20T02:00:00Z", completedAt: "2026-10-20T02:04:30Z", agents: [
+      { label: "a1", phase: "A", status: "done" },
+      { label: "b1", phase: "B", status: "done" },
+      { label: "c1", phase: "C", status: "failed" },
+    ] })
+  assert.equal(m.finished, true)
+  assert.equal(m.summary.phases, 3)
+  assert.equal(m.summary.settled, 3)
+  assert.equal(m.summary.total, 3)
+  assert.equal(m.summary.loops, 1)
+  assert.deepEqual(m.summary.failed, [{ station: "C", label: "c1" }])
+  assert.equal(m.summary.duration, 270000)
+})
+
+test("running runs are not finished and have no duration", () => {
+  const m = buildTimeline({ name: "r", phases: [{ title: "A" }] }, { status: "running", agents: [{ label: "a", phase: "A", status: "running" }] })
+  assert.equal(m.finished, false)
+  assert.equal(m.summary.duration, null)
+  assert.equal(m.summary.failed.length, 0)
+})
+
+test("extractDuration tolerates seconds/ISO/partial fields", () => {
+  assert.equal(extractDuration({ startedAt: 1000, completedAt: 2000 }), 1000 * 1000)
+  assert.equal(extractDuration({ startTime: 1760946000000, endTime: 1760946010000 }), 10000)
+  assert.equal(extractDuration({ start: "2026-10-20T02:00:00Z", end: "2026-10-20T02:01:00Z" }), 60000)
+  assert.equal(extractDuration({ startedAt: "2026-10-20T02:00:00Z" }), null)
+  assert.equal(extractDuration({}), null)
+})
+
+test("fmtDuration renders compact Chinese durations", () => {
+  assert.equal(fmtDuration(59400), "59秒")
+  assert.equal(fmtDuration(60000), "1分")
+  assert.equal(fmtDuration(270000), "4分30秒")
+  assert.equal(fmtDuration(5400000), "1小时30分")
+  assert.equal(fmtDuration(0), "")
+})
+
+test("renderTimelineHTML folds finished runs to a recap line", () => {
+  const m = buildTimeline(
+    { name: "r", phases: [{ title: "A" }, { title: "B" }, { title: "C" }], edges: [["C", "A"]] },
+    { status: "completed", agents: [
+      { label: "a1", phase: "A", status: "done" },
+      { label: "b1", phase: "B", status: "done" },
+      { label: "c1", phase: "C", status: "failed" },
+    ] })
+  const folded = renderTimelineHTML(m, { folded: true })
+  assert.match(folded, /is-folded/)
+  assert.match(folded, /zcf-fold/)
+  assert.match(folded, /1 失败/)
+  assert.match(folded, /↩1/)
+  assert.match(folded, /C\/c1/)
+  assert.match(folded, /3 个阶段/)
+  assert.doesNotMatch(folded, /zcf-strip/)
+  const open = renderTimelineHTML(m, { folded: false })
+  assert.match(open, /zcf-strip/)
+  assert.match(open, /zcf-fold/)
+  assert.doesNotMatch(open, /is-folded/)
+})
+
+// ── 边界用例 ──
+test("edge cases: empty phases, orphan agents, self/adjacent edges", () => {
+  const empty = buildTimeline({ name: "e", phases: [] }, { status: "completed", agents: [] })
+  assert.equal(empty.stations.length, 0)
+  assert.equal(empty.progress, null)
+  assert.equal(empty.finished, true)
+  assert.equal(renderTimelineHTML(empty, { folded: true }).includes("zcf-compact"), true) // 无站点不走折叠
+
+  const orphan = buildTimeline({ name: "o", phases: [{ title: "A" }] }, { status: "completed", agents: [{ label: "x", phase: "幽灵站", status: "done" }] })
+  assert.equal(orphan.stations.length, 2)
+  assert.equal(orphan.summary.total, 1)
+
+  // 自环与相邻边不成弧;三站回边成 loop 弧
+  const none = buildTimeline({ name: "d", phases: [{ title: "A" }, { title: "B" }], edges: [["A", "A"], ["A", "B"], ["B", "A"]] }, { status: "completed", agents: [{ label: "a", phase: "A", status: "done" }, { label: "b", phase: "B", status: "done" }] })
+  assert.equal(none.arcs.length, 0)
+  const loopArc = buildTimeline({ name: "d2", phases: [{ title: "A" }, { title: "B" }, { title: "C" }], edges: [["C", "A"]] }, { status: "completed", agents: [{ label: "a", phase: "A", status: "done" }, { label: "b", phase: "B", status: "done" }, { label: "c", phase: "C", status: "done" }] })
+  assert.equal(loopArc.arcs.length, 1)
+  assert.equal(loopArc.arcs[0].loop, true)
+  assert.equal(loopArc.stations[0].loopTarget, true)
 })

@@ -40,6 +40,13 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .zcf-detail { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; font-variant-numeric: tabular-nums; color: var(--color-foreground-subtlest); white-space: nowrap; }
 .zcf-runlamp { display: inline-flex; align-items: center; flex: none; }
+/* ── v0.3.0 完成态折叠：摘要 + 折叠按钮 ── */
+.zcf-fold { appearance: none; border: none; background: transparent; color: var(--color-foreground-subtle); width: 24px; height: 24px; margin-left: 2px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.zcf-fold:hover { background: color-mix(in oklab, var(--color-foreground) 8%, transparent); color: var(--color-foreground); }
+.zcf-fold .zcf-chev { transition: transform 160ms ease; }
+.zcf-fold[aria-expanded="true"] .zcf-chev { transform: rotate(180deg); }
+.zcf-card.is-folded { padding: 9px 14px; }
+.zcf-fail-bits { color: var(--color-destructive); }
 .zcf-word-pending, .zcf-word-stopped { color: var(--color-foreground-subtle); }
 .zcf-word-running { color: var(--color-warning); }
 .zcf-word-completed { color: var(--color-success); }

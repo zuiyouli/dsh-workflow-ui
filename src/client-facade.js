@@ -20,6 +20,13 @@ window.__ModuleLoader__.load({
     const metaStore = { byName: new Map(), listeners: new Set() }
     // 药丸折叠展开态（按站名跨重渲染保留——事件流每次更新都全量重渲染 innerHTML）
     const expandedPills = new Set()
+    // v0.3.0 完成态折叠记忆：workflow 名 → 用户是否要求展开（缺省 = 完成即收起）
+    const foldOverrides = new Map()
+    function foldState(m) {
+      if (!m || !m.finished) return false
+      const o = foldOverrides.get(m.name)
+      return o === undefined ? true : !o
+    }
     function stashMeta(name, meta) {
       if (!name || !meta) return
       metaStore.byName.set(name, meta)
@@ -65,6 +72,16 @@ window.__ModuleLoader__.load({
         const onClick = (e) => {
           const link = e.target && e.target.closest ? e.target.closest(".zcf-pill.is-link") : null
           if (link) { open(link); return }
+          // v0.3.0 完成态折叠切换：点击前是 folded → 展开并记住；反之收起
+          const foldBtn = e.target && e.target.closest ? e.target.closest(".zcf-fold") : null
+          if (foldBtn) {
+            const rootEl = foldBtn.closest(".zcf-root")
+            const key = rootEl?.dataset?.run
+            const wasFolded = !!foldBtn.closest(".zcf-card")?.classList.contains("is-folded")
+            if (key) foldOverrides.set(key, wasFolded)
+            setTick((x) => x + 1)
+            return
+          }
           const b = e.target && e.target.closest ? e.target.closest(".zcf-pillmore") : null
           if (!b) return
           const wrap = b.closest(".zcf-pills")
@@ -137,7 +154,7 @@ window.__ModuleLoader__.load({
       if (model.ok === false) {
         return h("div", { style: { padding: "6px 10px", fontSize: "12px", color: "var(--color-foreground-subtle)" } }, "workflow-ui 渲染降级: " + (model.err ?? "?"))
       }
-      return h("div", { ref: rootRef, dangerouslySetInnerHTML: { __html: renderTimelineHTML(model.m, { expanded: expandedPills }) } })
+      return h("div", { ref: rootRef, "data-run": node?.data?.name ?? "", dangerouslySetInnerHTML: { __html: renderTimelineHTML(model.m, { expanded: expandedPills, folded: foldState(model.m) }) } })
     }
 
     // 工具行 = 隐形数据源：显示空标记（CSS :has 隐藏整行），挂载时解析 argsRaw 并 stash。
@@ -214,7 +231,7 @@ window.__ModuleLoader__.load({
           slots.register({ name: TOOLVIEW_SLOT, id: "workflow-ui-tool", key: "workflow", priority: -1 }, WorkflowToolRow),
         )
       },
-      __test: { buildTimeline, modelFromRunNode, modelFromToolCall, renderTimelineHTML, stashMeta, metaFor, scanScript },
+      __test: { buildTimeline, modelFromRunNode, modelFromToolCall, renderTimelineHTML, stashMeta, metaFor, scanScript, extractDuration, fmtDuration, foldState },
     }
   },
 })

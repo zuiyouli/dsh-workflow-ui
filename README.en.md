@@ -70,7 +70,7 @@ See [docs/roadmap.md](docs/roadmap.md) for themes per version (next up v0.3.0: c
 
 - The tool row exists only as an invisible data source; the timeline card is the single entry point in a conversation.
 - Wide single-row windows draw the full arc set; re-flowed (multi-row) windows draw same-row arcs only and mark loop targets with badges.
-- Status words are built-in Chinese; run metrics and the locale channel are not wired yet.
+- Finished runs collapse to a one-line recap (phases / progress / loops / failure locations / duration — duration needs upstream time fields). Status words are built-in Chinese; the locale channel is not wired yet.
 - Workflow events are consumed read-only; the plugin keeps no parallel orchestration state.
 
 ## License
