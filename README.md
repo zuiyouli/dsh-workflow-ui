@@ -62,6 +62,10 @@ chrome --headless=new --virtual-time-budget=3000 --screenshot=shot.png docs/prev
 
 布局常量参考 ZCode 的公开工作流呈现设计（站宽 168 / 间距 192 / 灯心 +17，弧基 26 / 道距 14，6–8px 圆角接头，120/160/200/320ms 运动 token）。状态点与图标复现 DSH 官方 `dsh-client-ui-primitives` 的形制（StateDot、ListPen、Check、Close）。本插件与 ZCode、DSH 官方均无隶属关系。
 
+## 路线图
+
+迭代方向与版本主题见 [docs/roadmap.md](docs/roadmap.md)（下一版 v0.3.0：完成态折叠摘要 + 耗时/循环指标 + 失败复盘）。
+
 ## 边界说明
 
 - 工具行只作为隐形数据源存在；时间线卡是会话中的唯一入口。

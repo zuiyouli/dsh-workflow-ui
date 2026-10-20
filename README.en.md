@@ -62,6 +62,10 @@ chrome --headless=new --virtual-time-budget=3000 --screenshot=shot.png docs/prev
 
 Layout constants follow ZCode's public workflow presentation (station 168 / pitch 192 / lamp at +17, arc base 26 / lane 14, 6–8px rounded joins, 120/160/200/320ms motion tokens). Status dots and iconography reproduce the shapes of DSH's official `dsh-client-ui-primitives` (StateDot, ListPen, Check, Close); this plugin is not affiliated with ZCode or the DSH team.
 
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for themes per version (next up v0.3.0: collapsed finished-run summary + duration/loop metrics + failure recap).
+
 ## Notes & limitations
 
 - The tool row exists only as an invisible data source; the timeline card is the single entry point in a conversation.
