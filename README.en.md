@@ -71,4 +71,4 @@ Layout constants follow ZCode's public workflow presentation (station 168 / pitc
 
 ## License
 
-[MIT](LICENSE) © lijiefeng
+[MIT](LICENSE) © zuiyouli

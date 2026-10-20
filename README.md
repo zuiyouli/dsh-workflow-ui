@@ -71,4 +71,4 @@ chrome --headless=new --virtual-time-budget=3000 --screenshot=shot.png docs/prev
 
 ## 许可
 
-[MIT](LICENSE) © lijiefeng
+[MIT](LICENSE) © zuiyouli
