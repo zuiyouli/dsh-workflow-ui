@@ -52,9 +52,12 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-word-completed { color: var(--color-success); }
 .zcf-word-errored { color: var(--color-destructive); }
 /* ── 画面：横向时间线，容器窄时自动换行；行尾/行首由组件实测接线（下折/引入）── */
-.zcf-plot { overflow: visible; }
+.zcf-plot { overflow: visible; animation: zcf-plot-reveal 180ms var(--wf-ease); }
 .zcf-strip { position: relative; display: flex; flex-flow: row wrap; gap: 24px; row-gap: 30px; width: 100%; align-items: flex-start; }
-.zcf-station { position: relative; width: 168px; flex: none; }
+.zcf-station { position: relative; width: 168px; flex: none; border-radius: 8px; transition: background var(--wf-t-normal) var(--wf-ease); }
+.zcf-station[data-station-status="running"] {
+  background: radial-gradient(circle at 17px 12px, color-mix(in oklab, var(--color-warning) 10%, transparent) 0%, transparent 72%);
+}
 /* 灯槽（对齐轨心 17,12）：dot 10px；ongoing spinner 14px 外扩定位补偿 */
 .zcf-lamp { position: absolute; left: 12px; top: 7px; width: 10px; height: 10px; box-sizing: border-box; display: inline-flex; }
 .zcf-lamp.is-ongoing { left: 10px; top: 5px; width: 14px; height: 14px; }
@@ -107,15 +110,16 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 .zcf-arc-mk.march { fill: var(--color-warning); }
 /* ── 站头 ── */
 .zcf-station-head { display: flex; align-items: center; gap: 5px; height: 24px; padding-left: 26px; min-width: 0; }
-.zcf-station-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-foreground-subtle); }
+.zcf-station-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-foreground-subtle); mask-image: linear-gradient(to right, black calc(100% - 10px), transparent 100%); -webkit-mask-image: linear-gradient(to right, black calc(100% - 10px), transparent 100%); }
 .zcf-station.is-visited .zcf-station-name { color: var(--color-foreground); }
 .zcf-station-meta { font-family: var(--dsw-font-mono, ui-monospace, monospace); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-foreground-subtlest); flex: none; margin-left: -1px; }
 /* ── 药丸列：32px 高、间距 6、依次落地 ── */
 .zcf-pills { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 2px; padding-left: 8px; }
-.zcf-pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--color-surface); max-width: 160px; transition: background var(--wf-t-fast) var(--wf-ease); }
+.zcf-pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--color-surface); max-width: 160px; transition: background var(--wf-t-fast) var(--wf-ease), transform var(--wf-t-fast) var(--wf-ease), box-shadow var(--wf-t-fast) var(--wf-ease); }
 /* 入场动画只播一次：zcf-boot 由组件挂载时加上、~1s 后移除——事件流重渲染不重播（防闪烁） */
 .zcf-boot .zcf-pill { animation: zcf-arrive var(--wf-t-enter) var(--wf-ease) backwards; animation-delay: var(--zcf-d, 0ms); }
 .zcf-pill:hover { background: var(--color-surface-hover); }
+@keyframes zcf-plot-reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes zcf-arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .zcf-avatar { width: 18px; height: 18px; border-radius: 6px; flex: none; background: var(--wf-avatar, var(--color-rail)); position: relative; }
 .zcf-avatar::before, .zcf-avatar::after { content: ""; position: absolute; top: 6px; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
@@ -152,7 +156,8 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
 @keyframes zcf-chip-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
 /* 药丸 → 子会话跳转（childId 存在时） */
 .zcf-pill.is-link { cursor: pointer; }
-.zcf-pill.is-link:hover { background: var(--color-surface-hover); border-color: color-mix(in oklab, var(--color-border) 130%, transparent); }
+.zcf-pill.is-link:hover { background: var(--color-surface-hover); border-color: color-mix(in oklab, var(--color-border) 130%, transparent); transform: translateY(-1px); box-shadow: 0 2px 6px -1px color-mix(in oklab, var(--color-foreground) 12%, transparent); }
+.zcf-pill.is-link:active { transform: translateY(0); }
 .zcf-pill.is-link:focus-visible { outline: 1px solid var(--color-foreground-subtle); outline-offset: 1px; }
 /* 回边目标站徽标：仅换行模式显示（宽屏模式弧线本身可见） */
 .zcf-loop-badge { flex: none; margin-left: 2px; padding: 0 3px; border: 1px dashed color-mix(in oklab, var(--color-border) 90%, transparent); border-radius: 4px; font-size: 10px; line-height: 13px; color: var(--color-foreground-subtlest); }
@@ -160,6 +165,7 @@ div[data-chat-call-id]:has(.zcf-toolview-empty) { display: none !important; }
   .zcf-loop-badge { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .zcf-plot,
   .zcf-sd-motion, .zcf-sd-arc, .zcf-kind.is-running,
   .zcf-pill.is-running .zcf-avatar::before, .zcf-pill.is-running .zcf-avatar::after { animation: none; }
   .zcf-sd-arc { stroke-dasharray: 18 150; stroke-dashoffset: -3; }

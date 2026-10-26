@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 — 2026-10-26
+
+Third release: pure presentation layer transformation, recap summaries, and UI polish.
+
+### Added
+
+- Finished runs collapse to a compact single-line recap summary with failure locations, loop counts, and duration; fold state remembered per run.
+- Micro-interaction polish: running stations gain a radial-gradient pulse glow, station names receive fadeout masks, and subagent pills feature hover floating.
+
+### Changed
+
+- Unbundled agent preset: removed `preset-workflow-ui` so that the plugin acts as a pure presentation layer. Timeline visualization is now globally active across all presets/sessions without forcing the model into workflow-planning overhead.
+
 ## 0.2.0 — 2026-10-20
 
 Second release: verified on DSH 0.2.1-rc.2, working child-session navigation,
