@@ -49,14 +49,20 @@
   "prepublishOnly": "npm run check",
   "dsh": {
     "bundle": { "patch": "./cordis.patch.yml" },
-    "client": { "platform": "web" },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    },
     "compatibility": {
       "dsh": ">=0.1.0-rc.5 <0.3.0",
       "dshReleases": {
         "0.2.0-rc.2": "compatible",
-        "0.2.1-rc.2": "compatible"
+        "0.2.1-rc.2": "compatible",
+        "0.2.1-rc.3": "compatible"
       },
-      "profiles": ["web"]
+      "profiles": ["web", "desktop"]
     }
   },
   "repository": {
